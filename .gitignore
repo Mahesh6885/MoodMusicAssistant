@@ -1,24 +1,74 @@
-# Python virtual environment
-venv/
+# Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
-# Logs and cache
-*.log
-.cache/
-*.tmp
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
 
-# IDE / OS files
+# IDE
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
+
+# OS
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
-# Node-RED / Node
-node_modules/
-package-lock.json
+# Logs
+*.log
+logs/
 
-# Environment or secret files
-.env
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
+
+# Node-RED
+node_modules/
+.nodered/
+
+# MQTT
+mosquitto.conf
+mosquitto.log
+
+# Camera/Video
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.webm
+
+# Test files (if any)
+test_*.py
+*_test.py
