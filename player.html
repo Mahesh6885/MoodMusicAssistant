@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mood Music Player</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    /* Reset & body style */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #1e1e2f, #0f0f1a);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      padding: 30px;
+      transition: background 1s ease;
+    }
+
+    h2 {
+      font-size: 2em;
+      margin-bottom: 20px;
+      text-shadow: 0 0 10px rgba(255,255,255,0.5);
+    }
+
+    #moodContainer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      width: 90%;
+      max-width: 900px;
+    }
+
+    iframe {
+      width: 100%;
+      height: 450px;
+      border-radius: 15px;
+      box-shadow: 0 0 40px rgba(0,0,0,0.5);
+      transition: all 0.5s ease;
+    }
+
+    /* Mood-based background colors */
+    .happy { background: linear-gradient(135deg, #ff9a9e, #fad0c4); color: #111; }
+    .sad { background: linear-gradient(135deg, #a1c4fd, #c2e9fb); color: #111; }
+    .angry { background: linear-gradient(135deg, #f5576c, #ff9068); color: #111; }
+    .relaxed { background: linear-gradient(135deg, #43e97b, #38f9d7); color: #111; }
+
+    /* Footer */
+    footer {
+      margin-top: 40px;
+      font-size: 0.9em;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+  <h2 id="status">Waiting for mood...</h2>
+  <div id="moodContainer">
+    <iframe id="musicPlayer" frameborder="0" allow="autoplay; encrypted-media"></iframe>
+  </div>
+  <footer>🎵 Mood Music Assistant</footer>
+
+  <script>
+    const status = document.getElementById("status");
+    const musicPlayer = document.getElementById("musicPlayer");
+    const body = document.body;
+
+    // Connect to WebSocket server
+    const ws = new WebSocket("ws://localhost:8765");
+
+    ws.onopen = () => {
+      status.innerText = "Connected to Mood Assistant ✅";
+    };
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      const mood = data.mood;
+      const url = data.url;
+
+      status.innerText = `Mood detected: ${mood}`;
+
+      // Change background based on mood
+      body.className = "";
+      switch (mood.toLowerCase()) {
+        case "happy": body.classList.add("happy"); break;
+        case "sad": body.classList.add("sad"); break;
+        case "angry": body.classList.add("angry"); break;
+        case "relaxed": body.classList.add("relaxed"); break;
+        default: body.style.background = "#1e1e2f"; break;
+      }
+
+      // Load the playlist in the iframe
+      if (url.includes("spotify")) {
+        const embedUrl = url.replace("spotify:playlist:", "https://open.spotify.com/embed/playlist/");
+        musicPlayer.src = embedUrl;
+      } else if (url.includes("youtube")) {
+        const embedUrl = url.replace("watch?v=", "embed/");
+        musicPlayer.src = embedUrl + "?autoplay=1";
+      } else {
+        musicPlayer.src = url;
+      }
+    };
+
+    ws.onclose = () => {
+      status.innerText = "Disconnected from Mood Assistant ❌";
+    };
+  </script>
+</body>
+</html>

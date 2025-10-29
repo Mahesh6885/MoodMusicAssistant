@@ -1,0 +1,110 @@
+[
+  {
+    "id": "tab1",
+    "type": "tab",
+    "label": "Mood IoT Sim",
+    "disabled": false,
+    "info": "Webcam mood -> MQTT -> Node-RED decision -> music/cmd"
+  },
+  {
+    "id": "mqtt_broker",
+    "type": "mqtt-broker",
+    "name": "LocalBroker",
+    "broker": "127.0.0.1",
+    "port": "1883",
+    "clientid": "",
+    "usetls": false,
+    "protocolVersion": "4",
+    "keepalive": "60",
+    "cleansession": true,
+    "birthTopic": "",
+    "birthQos": "0",
+    "birthPayload": "",
+    "birthMsg": {},
+    "closeTopic": "",
+    "closeQos": "0",
+    "closePayload": "",
+    "closeMsg": {},
+    "willTopic": "",
+    "willQos": "0",
+    "willPayload": "",
+    "willMsg": {},
+    "sessionExpiry": ""
+  },
+  {
+    "id": "in_mood",
+    "type": "mqtt in",
+    "z": "tab1",
+    "name": "Mood In",
+    "topic": "ai/mood",
+    "qos": "0",
+    "datatype": "auto",
+    "broker": "mqtt_broker",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "x": 140,
+    "y": 120,
+    "wires": [
+      [
+        "fn_decide"
+      ]
+    ]
+  },
+  {
+    "id": "fn_decide",
+    "type": "function",
+    "z": "tab1",
+    "name": "Decide playlist + URL",
+    "func": "// msg.payload is a string mood: happy|sad|angry|stressed|relaxed\nvar mood = ('' + msg.payload).toLowerCase();\nvar time = flow.get('timeOfDay') || 'evening';     // set these with optional inject/change nodes\nvar weather = flow.get('weather') || 'clear';\nvar motion = flow.get('motion') || 1;              // 1=present, 0=absent\n\nif (Number(motion) === 0) {\n    return [{}, null]; // no playback\n}\n\n// basic policy: mood primary, then time/weather\nvar playlist = 'default_mixed';\nif (mood === 'stressed')       playlist = 'calm_lofi';\nelse if (mood === 'angry')     playlist = 'relax_acoustic';\nelse if (mood === 'sad')       playlist = 'uplift_soft';\nelse if (time === 'morning')   playlist = 'devotional_energetic';\nelse if (weather === 'rainy')  playlist = 'soft_instrumental';\n\n// TODO: Replace URLs with real YouTube/Spotify links\nvar urls = {\n  calm_lofi: ['https://example.com/lofi1','https://example.com/lofi2'],\n  relax_acoustic: ['https://example.com/acoustic1'],\n  uplift_soft: ['https://example.com/uplift1'],\n  devotional_energetic: ['https://example.com/devotional1'],\n  soft_instrumental: ['https://example.com/soft1'],\n  default_mixed: ['https://example.com/default1']\n};\nvar list = urls[playlist] || urls['default_mixed'];\nvar url = list[Math.floor(Math.random()*list.length)];\n\nvar out = {\n    action: 'play',\n    playlist: playlist,\n    url: url,\n    reason: {mood, time, weather}\n};\n\nreturn [{topic:'music/cmd', payload: JSON.stringify(out)}, JSON.stringify({mood, time, weather, playlist, url})];\n",
+    "outputs": 2,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 430,
+    "y": 120,
+    "wires": [
+      [
+        "out_cmd"
+      ],
+      [
+        "dbg"
+      ]
+    ]
+  },
+  {
+    "id": "out_cmd",
+    "type": "mqtt out",
+    "z": "tab1",
+    "name": "Music Cmd Out",
+    "topic": "music/cmd",
+    "qos": "",
+    "retain": "",
+    "respTopic": "",
+    "contentType": "",
+    "userProps": "",
+    "correl": "",
+    "expiry": "",
+    "broker": "mqtt_broker",
+    "x": 730,
+    "y": 100,
+    "wires": []
+  },
+  {
+    "id": "dbg",
+    "type": "debug",
+    "z": "tab1",
+    "name": "Decision Debug",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 720,
+    "y": 140,
+    "wires": []
+  }
+]
