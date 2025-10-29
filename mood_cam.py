@@ -4,7 +4,7 @@ import time
 import json
 import argparse
 import numpy as np
-from fer import FER
+from fer.fer import FER
 import paho.mqtt.client as mqtt
 
 EMO_MAP = {

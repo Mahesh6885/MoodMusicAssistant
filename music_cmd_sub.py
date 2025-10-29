@@ -96,15 +96,19 @@ def main():
     threading.Thread(target=websocket_thread, daemon=True).start()
     time.sleep(1)
 
-    # Open browser once
+    # Start web server and open browser
+    import subprocess
+    import sys
+    web_server_process = subprocess.Popen([sys.executable, "web_server.py"])
+    time.sleep(2)  # Wait for web server to start
     webbrowser.open("http://localhost:8000/player.html", new=1)
 
     # MQTT setup
     client = mqtt.Client(client_id="music_cmd_sub")
     client.on_message = on_message
-    client.connect("localhost", 1883, 60)
+    client.connect("localhost", 1884, 60)
     client.subscribe("ai/mood")
-    print("[INFO] Subscribed to mqtt://localhost:1883/ai/mood")
+    print("[INFO] Subscribed to mqtt://localhost:1884/ai/mood")
 
     client.loop_forever()
 

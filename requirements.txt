@@ -2,3 +2,5 @@ opencv-python
 fer
 numpy
 paho-mqtt
+spotipy
+websockets

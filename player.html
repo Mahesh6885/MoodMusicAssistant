@@ -93,21 +93,123 @@
         default: body.style.background = "#1e1e2f"; break;
       }
 
-      // Load the playlist in the iframe
-      if (url.includes("spotify")) {
-        const embedUrl = url.replace("spotify:playlist:", "https://open.spotify.com/embed/playlist/");
-        musicPlayer.src = embedUrl;
-      } else if (url.includes("youtube")) {
-        const embedUrl = url.replace("watch?v=", "embed/");
-        musicPlayer.src = embedUrl + "?autoplay=1";
-      } else {
-        musicPlayer.src = url;
-      }
+      // Auto-play music based on mood
+      playMusicForMood(mood, url);
     };
+
+    function playMusicForMood(mood, url) {
+      // Mood-based music selection with better auto-play support
+      const musicUrls = {
+        "happy": "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=0&loop=1&playlist=dQw4w9WgXcQ",
+        "sad": "https://www.youtube.com/embed/9bZkp7q19f0?autoplay=1&mute=0&loop=1&playlist=9bZkp7q19f0", 
+        "angry": "https://www.youtube.com/embed/kJQP7kiw5Fk?autoplay=1&mute=0&loop=1&playlist=kJQP7kiw5Fk",
+        "relaxed": "https://www.youtube.com/embed/5qap5aO4i9A?autoplay=1&mute=0&loop=1&playlist=5qap5aO4i9A",
+        "stressed": "https://www.youtube.com/embed/5qap5aO4i9A?autoplay=1&mute=0&loop=1&playlist=5qap5aO4i9A"
+      };
+
+      // Use provided URL or default based on mood
+      let musicUrl;
+      if (url && url.includes("youtube")) {
+        const videoId = url.split("v=")[1]?.split("&")[0];
+        musicUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&loop=1&playlist=${videoId}`;
+      } else {
+        musicUrl = musicUrls[mood.toLowerCase()] || musicUrls["relaxed"];
+      }
+
+      // Update the iframe source
+      musicPlayer.src = musicUrl;
+      
+      // Also try to play programmatically
+      setTimeout(() => {
+        try {
+          musicPlayer.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+        } catch (e) {
+          console.log("Auto-play attempt failed, user interaction may be required");
+        }
+      }, 1000);
+      
+      console.log(`Playing music for mood: ${mood} - ${musicUrl}`);
+      
+      // Show notification
+      showMoodNotification(mood);
+    }
+
+    function showMoodNotification(mood) {
+      // Create a notification element
+      const notification = document.createElement('div');
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(0,0,0,0.8);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 10px;
+        font-size: 18px;
+        z-index: 1000;
+        animation: slideIn 0.5s ease;
+      `;
+      notification.textContent = `🎵 Playing music for: ${mood.toUpperCase()}`;
+      
+      // Add animation
+      const style = document.createElement('style');
+      style.textContent = `
+        @keyframes slideIn {
+          from { transform: translateX(100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+      `;
+      document.head.appendChild(style);
+      
+      document.body.appendChild(notification);
+      
+      // Remove after 3 seconds
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
+    }
 
     ws.onclose = () => {
       status.innerText = "Disconnected from Mood Assistant ❌";
     };
+
+    // Fallback: Test mood changes with buttons
+    function addTestButtons() {
+      const testContainer = document.createElement('div');
+      testContainer.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        display: flex;
+        gap: 10px;
+        z-index: 1000;
+      `;
+      
+      const moods = ['happy', 'sad', 'angry', 'relaxed', 'stressed'];
+      moods.forEach(mood => {
+        const btn = document.createElement('button');
+        btn.textContent = mood.toUpperCase();
+        btn.style.cssText = `
+          padding: 10px 15px;
+          background: #007bff;
+          color: white;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+          font-weight: bold;
+        `;
+        btn.onclick = () => {
+          console.log(`Testing mood: ${mood}`);
+          playMusicForMood(mood, '');
+        };
+        testContainer.appendChild(btn);
+      });
+      
+      document.body.appendChild(testContainer);
+    }
+
+    // Add test buttons after page loads
+    setTimeout(addTestButtons, 2000);
   </script>
 </body>
 </html>
